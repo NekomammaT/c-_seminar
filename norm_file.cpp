@@ -6,25 +6,19 @@ using namespace std;
 
 int main()
 {
-  ifstream ifs("norm_var.dat"); // 読み取り用にファイルを開いて保持するオブジェクト
+  ifstream ifs("norm_var.dat"); // 読み取り用にファイルを開いて保持
+  ofstream ofs("norm_result.dat"); // 出力用にファイルを開いて保持
   string str; // 1行ごとにデータを文字列として保持するための変数を用意
-  istringstream iss; // 文字列をストリームに
-
-  while (getline(ifs,str)) { // ファイルデータを1行ごとに str に代入
-    
-  }
-  
-  cout << "(x, y, z) = ?" << endl;
 
   double x, y, z;
-  cin >> x >> y >> z;
+  
+  while (getline(ifs,str)) { // ファイルデータを1行ごとに str に代入
+    istringstream iss(str); // str の中身を入力用ストリームに変換
+    iss >> x >> y >> z;
 
-  /*
-  cin >> x;
-  cin >> y;
-  cin >> z; // でも OK
-  */
-
-  cout << "x = " << x << ", y = " << y << ", z = " << z << endl;
-  cout << "x^2 + y^2 + z^2 = " << x*x + y*y + z*z << endl;
+    ofs << x << ' ' << y << ' ' << z << ' '
+	<< x*x + y*y + z*z << endl; // 出力ファイルに結果を出力
+    cout << x << ' ' << y << ' ' << z << ' '
+	 << x*x + y*y + z*z << endl; // 標準出力にも出力
+  }
 }
