@@ -3,7 +3,7 @@
 
 using namespace std;
 
-vector<double> f(vector<double> v) { // 2番目の要素だけ2倍
+vector<double> f(vector<double> v) { // 2番目の要素だけ2倍した vector を返す
   v[1] *= 2;
   return v;
 }
