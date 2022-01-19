@@ -1,15 +1,20 @@
 #define _USE_MATH_DEFINES
+#include <cmath> // 基本的な数学関数や定数のライブラリ。この2つはセット
 
-#include <sys/time.h>
-#include <cmath>
+#include <sys/time.h> // ストップウォッチ用
 #include <iostream>
-#include <functional>
 
 using namespace std;
 
-double IntTrap(function<double(double)> func, double xmin, double xmax, int istep);
-double ff(double x);
-double gg(double x);
+// 2つの被積分関数
+double ff(double x) {
+  return 4./(1+x*x);
+}
+
+double gg(double x) {
+  return 2*sin(2*M_PI*x)*sin(2*M_PI*x);
+}
+
 
 int main()
 {
@@ -23,14 +28,32 @@ int main()
   // ---------------------------------------------------
 
   
-  double xmin = 0;
-  double xmax = 1;
-  int istep = 1000;
+  double xmin = 0; // 積分下端
+  double xmax = 1; // 上端
+  int istep = 1000; // 分割数 n
 
-  cout << IntTrap(ff,xmin,xmax,istep) << ' '
-       << IntTrap(gg,xmin,xmax,istep) << endl;
+  double dx = (xmax-xmin)/istep;
+  double IntTrap = (ff(xmin)+ff(xmax))/2.*dx; // 最初と最後だけ足しておく
+  double x; // 積分変数
+
+  for (int i=1; i<istep; i++) {
+    x = xmin + i*dx; 
+    IntTrap += ff(x)*dx;
+  }
+  
+  cout << IntTrap << endl;
 
 
+  IntTrap = (gg(xmin)+gg(xmax))/2.*dx;
+
+  for (int i=1; i<istep; i++) {
+    x = xmin + i*dx;
+    IntTrap += gg(x)*dx;
+  }
+
+  cout << IntTrap << endl;
+
+  
   // ---------------- return elapsed time --------------
   gettimeofday(&tv, &tz);
   after = (double)tv.tv_sec + (double)tv.tv_usec * 1.e-6;
@@ -39,23 +62,4 @@ int main()
 }
 
 
-double IntTrap(function<double(double)> func, double xmin, double xmax, int istep) {
-  double dx = (xmax-xmin)/istep;
-  double IntTrap = (func(xmin)+func(xmax))/2.*dx;
-  double x;
 
-  for (int i=1; i<istep; i++) {
-    x = xmin + i*dx;
-    IntTrap += func(x)*dx;
-  }
-
-  return IntTrap;
-}
-
-double ff(double x) {
-  return 4./(1+x*x);
-}
-
-double gg(double x) {
-  return 2*sin(2*M_PI*x)*sin(2*M_PI*x);
-}
