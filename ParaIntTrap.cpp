@@ -5,10 +5,14 @@
 #include <iostream>
 #include <functional>
 #include <vector>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 using namespace std;
 
 double IntTrap(function<double(vector<double>)> func, int Ix, double xmin, double xmax, int istep, vector<double> y);
+double ParaIntTrap(function<double(vector<double>)> func, int Ix, double xmin, double xmax, int istep, vector<double> y);
 double ff(vector<double> x);
 
 int main()
@@ -22,6 +26,10 @@ int main()
   before = (double)tv.tv_sec + (double)tv.tv_usec * 1.e-6;
   // ---------------------------------------------------
 
+  // 並列化がしていることを確認するためにも、マシンのスレッド数を出力しておく
+#ifdef _OPENMP
+  cout << "OpenMP : Enabled (Max # of threads = " << omp_get_max_threads() << ")" << endl;
+#endif
   
   double xmin = 0;
   double xmax = 1;
@@ -30,7 +38,7 @@ int main()
   
   function<double(vector<double>)> intfx
     = [xmin,xmax,istep](vector<double> y){ return IntTrap(ff,0,xmin,xmax,istep,y); };
-  cout << IntTrap(intfx,1,xmin,xmax,istep,v) << endl;
+  cout << ParaIntTrap(intfx,1,xmin,xmax,istep,v) << endl; // 並列化は最外ループにのみかけよう
 
 
   // ---------------- return elapsed time --------------
@@ -53,6 +61,34 @@ double IntTrap(function<double(vector<double>)> func, int Ix, double xmin, doubl
       IntTrap += func(y)*dx/2.;
     } else {
       IntTrap += func(y)*dx;
+    }
+  }
+
+  return IntTrap;
+}
+
+double ParaIntTrap(function<double(vector<double>)> func, int Ix, double xmin, double xmax, int istep, vector<double> y) {
+  double dx = (xmax-xmin)/istep;
+  double IntTrap = 0;
+
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+  for (int i=0; i<=istep; i++) {
+    double x = xmin + i*dx;
+    vector<double> yy = y;
+    yy[Ix] = x;
+
+    if (i==0 || i==istep) {
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
+      IntTrap += func(yy)*dx/2.;
+    } else {
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
+      IntTrap += func(yy)*dx;
     }
   }
 

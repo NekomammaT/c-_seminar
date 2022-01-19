@@ -1,6 +1,6 @@
 #include <sys/time.h>
 #include <iostream>
-#include "IntTrap.hpp"
+#include "IntTrap.hpp" // ヘッダを読み込めば IntTrap 関数が使える
 
 double ff(vector<double> x);
 
