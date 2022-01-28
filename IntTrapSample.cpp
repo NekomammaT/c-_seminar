@@ -1,6 +1,11 @@
+#define _USE_MATH_DEFINES
+
 #include <sys/time.h>
 #include <iostream>
+#include <cmath>
 #include "IntTrap.hpp" // ヘッダを読み込めば IntTrap 関数が使える
+
+using namespace std;
 
 double ff(vector<double> x);
 
