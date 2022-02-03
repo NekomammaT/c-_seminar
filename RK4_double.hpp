@@ -7,13 +7,13 @@
 
 using namespace std;
 
-template <class T>
-void RK4(function<T(double,T)> dxdt, double &t, T &x, double dt);
+void RK4(function<vector<double>(double,vector<double>)> dxdt,
+	 double &t, vector<double> &x, double dt);
 
 
 // t と x は更新するので参照渡し
-template <class T>
-void RK4(function<T(double,T)> dxdt, double &t, T &x, double dt)
+void RK4(function<vector<double>(double,vector<double>)> dxdt,
+	 double &t, vector<double> &x, double dt)
 {
   // ---------- RK4 の Butcher 係数 ------------------
   double a[4][4], b[4], c[4];
@@ -29,8 +29,8 @@ void RK4(function<T(double,T)> dxdt, double &t, T &x, double dt)
   // ------------------------------------------------
 
 
-  T k[4]; // 4つの k_i
-  T y; // k_i を求めるには y = x + dt sum_j^(i-1) a_ij k_j が必要
+  vector<double> k[4]; // 4つの k_i
+  vector<double> y; // k_i を求めるには y = x + dt sum_j^(i-1) a_ij k_j が必要
 
 
   for (int i=0; i<4; i++) {
