@@ -5,7 +5,7 @@
 
 using namespace std;
 
-vector<double> dxdt(double t, vector<double> x);
+vector<double> dxdt(double t, const vector<double> &x);
 
 int main()
 {
@@ -16,22 +16,20 @@ int main()
 
   ofstream ofs("oscillator.dat");
 
-  // 初期値をターミナルとファイルに出力
-  cout << t << ' ' << x[0] << ' ' << x[1] << endl;
-  ofs << t << ' ' << x[0] << ' ' << x[1] << endl;
-
   // t が tf に到達するまで RK4 を実行。
-  // ターミナルとファイルに出力
   while (t<tf) {
-    RK4<vector<double>>(dxdt,t,x,dt);
+    // ターミナルとファイルに出力
     cout << t << ' ' << x[0] << ' ' << x[1] << endl;
     ofs << t << ' ' << x[0] << ' ' << x[1] << endl;
+    
+    RK4<vector<double>>(dxdt,t,x,dt);
   }
 }
 
 
 // 調和振動子 EoM
-vector<double> dxdt(double t, vector<double> x) {
+vector<double> dxdt(double t, const vector<double> &x)
+{
   vector<double> dxdt(2);
 
   dxdt[0] = x[1];

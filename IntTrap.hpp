@@ -14,7 +14,7 @@ using namespace std;
 // x の関数 func(x) を xmin から xmax まで istep 分割で積分する
 double IntTrap(function<double(double)> func, double xmin, double xmax, int istep);
 
-// 他変数関数 func を Ix 番目の変数に関して xmin から xmax まで istep 分割で積分
+// 多変数関数 func を Ix 番目の変数に関して xmin から xmax まで istep 分割で積分
 // 積分変数以外の変数は値 y に固定
 double IntTrap(function<double(vector<double>)> func, int Ix, double xmin, double xmax, int istep, vector<double> y);
 
