@@ -1,5 +1,6 @@
 #define _USE_MATH_DEFINES
 
+#include <algorithm> // 3つのmin
 #include <iostream>
 #include <fstream>
 #include <cmath>
@@ -9,8 +10,8 @@
 
 using namespace std;
 
-#define MM 9e-6 // phi の質量 M in Mpl
-#define mm 1./9 // psi の質量 m in M 
+#define MM (9e-6) // phi の質量 M in Mpl
+#define mm (1./9) // psi の質量 m in M 
 #define PHII 13. // phi0 の初期値
 #define PSII 13. // psi0 の初期値
 #define DTR 0.01 // 時間刻み dt は 0.01/H か 0.01a/k か 0.01 の小さいものとする
