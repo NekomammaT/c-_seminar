@@ -3,6 +3,7 @@
 #define INCLUDED_vec_op_hpp_
 
 #include <vector>
+#include <complex>
 
 
 template <class T1, class T2>
@@ -38,6 +39,27 @@ std::vector<T1>& operator-=(std::vector<T1> &v1, const std::vector<T2> &v2) {
 template <class T>
 std::vector<T>& operator*=(std::vector<T> &v, const T &c) {
   for (T &e : v)
+    e *= c;
+  return v;
+}
+
+template <class T>
+std::vector<std::complex<T>>& operator*=(std::vector<std::complex<T>> &v, const T &c) {
+  for (std::complex<T> &e : v)
+    e *= c;
+  return v;
+}
+
+template <class T>
+std::vector<std::vector<std::complex<T>>>& operator*=(std::vector<std::vector<std::complex<T>>> &v, const T &c) {
+  for (std::vector<std::complex<T>> &e : v)
+    e *= c;
+  return v;
+}
+
+template <class T>
+std::vector<std::vector<std::vector<std::complex<T>>>>& operator*=(std::vector<std::vector<std::vector<std::complex<T>>>> &v, const T &c) {
+  for (std::vector<std::vector<std::complex<T>>> &e : v)
     e *= c;
   return v;
 }

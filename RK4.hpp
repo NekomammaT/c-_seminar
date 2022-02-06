@@ -82,10 +82,9 @@ void RK4(function<Tx0(double, const Tx0&)> dx0dt,
   Tx0 y0; // x0 のための y
   Tdx dy; // dx のための dy
 
-
   for (int i=0; i<4; i++) {
     y0 = x0;
-    dy = dy;
+    dy = dx;
 
     for (int j=0; j<i; j++) {
       y0 += dt * a[i][j] * k0[j];
@@ -96,7 +95,6 @@ void RK4(function<Tx0(double, const Tx0&)> dx0dt,
     dk[i] = ddxdt(t+c[i]*dt, y0, dy, kk);
   }
 
-  
   t += dt; // t を更新
 
   for (int i=0; i<4; i++) {
