@@ -8,7 +8,8 @@
 
 using namespace std;
 
-#define mm 1./9 // psi の質量 m
+#define MM 9e-6 // phi の質量 M
+#define mm 1e-6 // psi の質量 m
 #define PHII 13 // phi0 の初期値
 #define PSII 13 // psi0 の初期値
 #define DTH 0.01 // 時間刻み dt は 0.01/H とする
@@ -82,14 +83,14 @@ double V(const vector<vector<double>> &x)
   double phi0 = x[0][0];
   double psi0 = x[1][0];
   
-  return phi0*phi0/2. + mm*mm*psi0*psi0/2.;
+  return MM*MM*phi0*phi0/2. + mm*mm*psi0*psi0/2.;
 }
 
 double Vphi(const vector<vector<double>> &x)
 {
   double phi0 = x[0][0];
   
-  return phi0;
+  return MM*MM*phi0;
 }
 
 double Vpsi(const vector<vector<double>> &x)

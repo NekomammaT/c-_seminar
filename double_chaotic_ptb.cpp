@@ -10,12 +10,12 @@
 
 using namespace std;
 
-#define MM (9e-6) // phi の質量 M in Mpl
-#define mm (1./9) // psi の質量 m in M 
-#define PHII 13. // phi0 の初期値
-#define PSII 13. // psi0 の初期値
-#define DTR 0.01 // 時間刻み dt は 0.01/H か 0.01a/k か 0.01 の小さいものとする
-#define KOH 100.
+#define MM 9e-6 // phi の質量 M
+#define mm 1e-6 // psi の質量 m
+#define PHII 13 // phi0 の初期値
+#define PSII 13 // psi0 の初期値
+#define DTR 0.01 // 時間刻み dt は 0.01/H か 0.01a/k か 0.01/M の小さいものとする
+#define KOH 100
 #define DLNK 0.01 // 波数として 100H*exp(-0.01), 100H, 100H*exp(0.01) の3つを用いる
 #define FILE "double_chaotic_ptb.dat" // 出力ファイル名
 
@@ -42,7 +42,7 @@ int main()
 {
   // 初期条件
   double t = 0;
-  vector<vector<double>> x0{{PHII,1e-5},{PSII,0},{0}};
+  vector<vector<double>> x0{{PHII,1e-10},{PSII,0},{0}};
 
   double Hi = H(x0);
   vector<double> kk{KOH*Hi*exp(-DLNK), KOH*Hi, KOH*Hi*exp(DLNK)};
@@ -90,7 +90,7 @@ int main()
     cout << endl;
     ofs << endl;
     
-    dt = DTR*min({1./H(x0), exp(x0[x0.size()-1][0])/kk[kk.size()-1], 1.}); // 時間刻み
+    dt = DTR*min({1./H(x0), exp(x0[x0.size()-1][0])/kk[kk.size()-1], 1./MM}); // 時間刻み
     RK4<vector<vector<double>>, vector<vector<vector<vector<complex<double>>>>>, vector<double>>(dx0dt,ddxdt,t,x0,dx,kk,dt); // RK4 1step
   }
 }
@@ -146,7 +146,7 @@ double V(const vector<vector<double>> &x0)
   double phi0 = x0[0][0];
   double psi0 = x0[1][0];
   
-  return phi0*phi0/2. + mm*mm*psi0*psi0/2.;
+  return MM*MM*phi0*phi0/2. + mm*mm*psi0*psi0/2.;
 }
 
 double VI(const vector<vector<double>> &x0, int I)
@@ -155,7 +155,7 @@ double VI(const vector<vector<double>> &x0, int I)
   double psi0 = x0[1][0];
 
   if (I == 0)
-    return phi0;
+    return MM*MM*phi0;
   else
     return mm*mm*psi0;
 }
@@ -163,7 +163,7 @@ double VI(const vector<vector<double>> &x0, int I)
 double VIJ(const vector<vector<double>> &x0, int I, int J)
 {
   if (I == 0 && J == 0)
-    return 1;
+    return MM*MM;
   else if (I == 1 && J == 1)
     return mm*mm;
   else
@@ -174,11 +174,10 @@ double H(const vector<vector<double>> &x0)
 {
   double kinE = 0;
 
-  for (vector<double> v : x0) {
-    kinE += v[1]*v[1];
+  for (int I; I<x0.size()-1; I++) {
+    kinE += x0[I][1]*x0[I][1]/2.;
   }
 
-  kinE /= 2.;
   return sqrt( (kinE + V(x0)) / 3. );
 }
 
@@ -186,11 +185,10 @@ double Hdot(const vector<vector<double>> &x0)
 {
   double Hdot = 0;
 
-  for (vector<double> v : x0) {
-    Hdot -= v[1]*v[1];
+  for (int I; I<x0.size()-1; I++) {
+    Hdot -= x0[I][1]*x0[I][1]/2.;
   }
 
-  Hdot /= 2.;
   return Hdot;
 }
 
@@ -221,9 +219,8 @@ double calPR(const vector<vector<double>> &x0, const vector<vector<vector<vector
   double calPR = 0;
 
   for (int al=0; al<dx[ik].size(); al++) {
-    calPR += kk[ik]*kk[ik]*kk[ik]*norm( calR(x0,dx,ik,al) );
+    calPR += kk[ik]*kk[ik]*kk[ik]/2./M_PI/M_PI*norm( calR(x0,dx,ik,al) );
   }
 
-  calPR *= MM*MM/2./M_PI/M_PI;
   return calPR;
 }
