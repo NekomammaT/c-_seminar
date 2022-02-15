@@ -18,15 +18,20 @@ double IntTrap(function<double(double)> func, double xmin, double xmax, int iste
 // 積分変数以外の変数は値 y に固定
 double IntTrap(function<double(vector<double>)> func, int Ix, double xmin, double xmax, int istep, vector<double> y);
 
+// 多変数関数 func を xmin から xmax まで istep 分割で多重積分
+double MultiIntTrap(function<double(vector<double>)> func, vector<double> xmin, vector<double> xmax, vector<int> istep);
+
 // 上記の関数をそれぞれ並列化
 double ParaIntTrap(function<double(double)> func, double xmin, double xmax, int istep);
 double ParaIntTrap(function<double(vector<double>)> func, int Ix, double xmin, double xmax, int istep, vector<double> y);
+double ParaMultiIntTrap(function<double(vector<double>)> func, vector<double> xmin, vector<double> xmax, vector<int> istep);
 // ------------------------------------------------------------------------------------
 
 
 
 
-double IntTrap(function<double(double)> func, double xmin, double xmax, int istep) {
+double IntTrap(function<double(double)> func, double xmin, double xmax, int istep)
+{
   double dx = (xmax-xmin)/istep;
   double IntTrap = (func(xmin)+func(xmax))/2.*dx;
   double x;
@@ -39,7 +44,8 @@ double IntTrap(function<double(double)> func, double xmin, double xmax, int iste
   return IntTrap;
 }
 
-double IntTrap(function<double(vector<double>)> func, int Ix, double xmin, double xmax, int istep, vector<double> y) {
+double IntTrap(function<double(vector<double>)> func, int Ix, double xmin, double xmax, int istep, vector<double> y)
+{
   double dx = (xmax-xmin)/istep;
   double IntTrap = 0, x;
 
@@ -57,7 +63,35 @@ double IntTrap(function<double(vector<double>)> func, int Ix, double xmin, doubl
   return IntTrap;
 }
 
-double ParaIntTrap(function<double(double)> func, double xmin, double xmax, int istep) {
+double MultiIntTrap(function<double(vector<double>)> func, vector<double> xmin, vector<double> xmax, vector<int> istep)
+{
+  // IntTrap 用のダミー変数
+  vector<double> v = xmin;
+
+  // 0番目からi番目の変数まで積分し終わった関数を順に定義していく
+  vector<function<double(vector<double>)>> intfx(xmin.size());
+
+  // 0番目は func を0番目について積分
+  // func はグローバルに定義されてないので lambda 式にキャプチャする必要がある
+  intfx[0] = [func,xmin,xmax,istep](vector<double> y) {
+    return IntTrap(func,0,xmin[0],xmax[0],istep[0],y);
+  };
+
+  // 以降i番目は intfx[i-1] をi番目について積分
+  // intfx, i はグローバルに定義されてないので lambda 式にキャプチャする必要がある
+  for (int i=1; i<xmin.size(); i++) {
+    intfx[i] = [intfx,i,xmin,xmax,istep](vector<double> y) {
+      return IntTrap(intfx[i-1],i,xmin[i],xmax[i],istep[i],y);
+    };
+  }
+
+  // 求めるべきは最後の関数
+  return intfx[xmin.size()-1](v);
+}
+
+
+double ParaIntTrap(function<double(double)> func, double xmin, double xmax, int istep)
+{
   double dx = (xmax-xmin)/istep;
   double IntTrap = (func(xmin)+func(xmax))/2.*dx;
   double x;
@@ -77,7 +111,8 @@ double ParaIntTrap(function<double(double)> func, double xmin, double xmax, int 
   return IntTrap;
 }
 
-double ParaIntTrap(function<double(vector<double>)> func, int Ix, double xmin, double xmax, int istep, vector<double> y) {
+double ParaIntTrap(function<double(vector<double>)> func, int Ix, double xmin, double xmax, int istep, vector<double> y)
+{
   double dx = (xmax-xmin)/istep;
   double IntTrap = 0;
 
@@ -104,5 +139,26 @@ double ParaIntTrap(function<double(vector<double>)> func, int Ix, double xmin, d
 
   return IntTrap;
 }
+
+double ParaMultiIntTrap(function<double(vector<double>)> func, vector<double> xmin, vector<double> xmax, vector<int> istep)
+{
+  vector<double> v = xmin;
+  int xsize = xmin.size();
+  vector<function<double(vector<double>)>> intfx(xsize);
+
+  intfx[0] = [func,xmin,xmax,istep](vector<double> y) {
+    return IntTrap(func,0,xmin[0],xmax[0],istep[0],y);
+  };
+
+  for (int i=1; i<xmin.size()-1; i++) {
+    intfx[i] = [intfx,i,xmin,xmax,istep](vector<double> y) {
+      return IntTrap(intfx[i-1],i,xmin[i],xmax[i],istep[i],y);
+    };
+  }
+
+  // 大外だけ ParaIntTrap にして返す
+  return ParaIntTrap(intfx[xsize-2],xsize-1,xmin[xsize-1],xmax[xsize-1],istep[xsize-1],v);
+}
+
 
 #endif
