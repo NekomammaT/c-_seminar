@@ -15,9 +15,10 @@ using namespace std;
 #define PHII 13 // phi0 の初期値
 #define PSII 13 // psi0 の初期値
 #define DTR 0.01 // 時間刻み dt は 0.01/H か 0.01a/k か 0.01/M の小さいものとする
-#define KOH 100
-#define DLNK 0.01 // 波数として 100H*exp(-0.01), 100H, 100H*exp(0.01) の3つを用いる
+#define KOH 1000
+#define DLNK 1 // 波数として 1000H*exp(-2) 1000H*exp(-1), 1000H, 1000H*exp(1), 1000H*exp(2) の5つを用いる
 #define FILE "double_chaotic_ptb.dat" // 出力ファイル名
+#define DEXPN 0.01 // 毎ステップ出力してると大変なので 0.01 e-folds ごとに出力する
 
 vector<vector<double>> dx0dt(double t, const vector<vector<double>> &x0);
 vector<vector<vector<vector<complex<double>>>>>
@@ -45,9 +46,9 @@ int main()
   vector<vector<double>> x0{{PHII,1e-10},{PSII,0},{0}};
 
   double Hi = H(x0);
-  vector<double> kk{KOH*Hi*exp(-DLNK), KOH*Hi, KOH*Hi*exp(DLNK)};
+  vector<double> kk{KOH*Hi*exp(-2*DLNK), KOH*Hi*exp(-DLNK), KOH*Hi, KOH*Hi*exp(DLNK), KOH*Hi*exp(2*DLNK)};
 
-  // dx は 3*2*2*2 行列
+  // dx は 5*2*2*2 行列
   vector<vector<vector<vector<complex<double>>>>>
     dx(kk.size(), vector<vector<vector<complex<double>>>>(x0.size()-1, vector<vector<complex<double>>>(x0.size()-1, vector<complex<double>>(2) ) ) );
 
@@ -68,27 +69,31 @@ int main()
   // 出力ファイル準備
   ofstream ofs(FILE);
 
-  // 時間刻み準備
-  double dt;
+  double dt;   // 時間刻み準備
+  double expN = 0; // 出力用 e-folds カウンタ
 
   while (epsilon(x0) < 1) {
     // データ書き出し
-    cout << t << ' ';
-    ofs << t << ' ';
-    for (vector<double> v : x0) {
-      for (double e : v) {
-	cout << e << ' ';
-	ofs << e << ' ';
+    if (x0[x0.size()-1][0] >= expN) {
+      cout << t << ' ';
+      ofs << t << ' ';
+      for (vector<double> v : x0) {
+	for (double e : v) {
+	  cout << e << ' ';
+	  ofs << e << ' ';
+	}
       }
+      cout << H(x0) << ' ' << epsilon(x0) << ' ';
+      ofs << H(x0) << ' ' << epsilon(x0) << ' ';
+      for (int ik=0; ik<kk.size(); ik++) {
+	cout << calPR(x0,dx,kk,ik) << ' ';
+	ofs << calPR(x0,dx,kk,ik) << ' ';
+      }
+      cout << endl;
+      ofs << endl;
+
+      expN += DEXPN; // カウンタ更新
     }
-    cout << H(x0) << ' ' << epsilon(x0) << ' ';
-    ofs << H(x0) << ' ' << epsilon(x0) << ' ';
-    for (int ik=0; ik<kk.size(); ik++) {
-      cout << calPR(x0,dx,kk,ik) << ' ';
-      ofs << calPR(x0,dx,kk,ik) << ' ';
-    }
-    cout << endl;
-    ofs << endl;
     
     dt = DTR*min({1./H(x0), exp(x0[x0.size()-1][0])/kk[kk.size()-1], 1./MM}); // 時間刻み
     RK4<vector<vector<double>>, vector<vector<vector<vector<complex<double>>>>>, vector<double>>(dx0dt,ddxdt,t,x0,dx,kk,dt); // RK4 1step
@@ -119,6 +124,7 @@ ddxdt(double t, const vector<vector<double>> &x0, const vector<vector<vector<vec
   double Hc = H(x0); // Hubble
   double N = x0[x0.size()-1][0]; // e-folds
   double aa = exp(N); // scale factor
+  double ee = epsilon(x0); // SR param.
   
   vector<vector<vector<vector<complex<double>>>>> ddxdt = dx; // 初期化
 
@@ -130,8 +136,8 @@ ddxdt(double t, const vector<vector<double>> &x0, const vector<vector<vector<vec
 	ddxdt[ik][al][I][1] = -3*Hc*dx[ik][al][I][1] - kk[ik]*kk[ik]*dx[ik][al][I][0]/aa/aa;
 
 	for (int J=0; J<ddxdt[ik][al].size(); J++) {
-	  ddxdt[ik][al][I][1] += - VIJ(x0,I,J)*dx[ik][al][J][0] + 3*x0[J][1]*x0[J][1]*dx[ik][al][I][0]
-	    + 2*x0[J][1]*dx0dt(t,x0)[J][1]*dx[ik][al][I][0]/Hc;
+	  ddxdt[ik][al][I][1] += (-VIJ(x0,I,J) + (3+ee)*x0[I][1]*x0[J][1]
+				  + x0[I][1]*dx0dt(t,x0)[J][1]/Hc + x0[J][1]*dx0dt(t,x0)[I][1]/Hc)*dx[ik][al][J][0];
 	}
       }
     }
